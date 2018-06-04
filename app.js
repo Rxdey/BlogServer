@@ -44,5 +44,5 @@ app
   .use(router.allowedMethods())
 
 
-console.log(`server start at localhost://3000`.green)
+console.log(`server start at http://localhost:3000/`.green)
 app.listen(3000);
