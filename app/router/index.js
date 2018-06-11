@@ -1,23 +1,69 @@
 const Router = require('koa-router');
 const moment = require('moment');
 const router = new Router();
+const crypto = require('crypto')
 const {
   Target,
   User,
   Article,
   findPage
 } = require('../model/model')
+
+router.all('/*', async (ctx, next) => {
+  const token = '19ff99b8b15918cd03da3f44e7bcba61';
+  let needToken = ['/saveArt','/deleteTarget','/delArt','/addTaget','/addArticle','/pubArt']
+  let url = ctx.request.url.toString();
+  let isUrl = needToken.indexOf(url);
+  if(isUrl !== -1){
+    let header = ctx.request.header;
+    if(header.token !== token){
+      ctx.body = {
+        code:"11111",
+        msg:'未登录',
+        data:null
+      };
+      return
+    }
+  }
+  await next()
+ 
+});
+
+
 router.get('/', async (ctx, next) => {
   let title = 'api'
   await ctx.render('index', {
     title
   })
 });
-
+router.post('/login', async (ctx, next) => {
+  let result = {
+    code: '00000',
+    data: [],
+    msg: '登录成功'
+  }
+  let username = ctx.request.body.username;
+  let passwd = ctx.request.body.passwd;
+  passwd = md5(passwd)
+  let isUser = await User.findOne({
+    where:{
+      username:username,
+      passwd:passwd
+    }
+  })
+  if(!isUser){
+    result.code = '99999';
+    result.msg = '用户名或密码错误';
+  }else{
+    result.data = md5(username+passwd+'rxdey');
+  }
+  ctx.body = result;
+  
+});
 router.get('/home', async (ctx, next) => {
   ctx.body = ctx.request.query;
 });
-
+// 获取target
 router.post('/getTarget', async (ctx, next) => {
   let result = {
     code: '00000',
@@ -32,7 +78,7 @@ router.post('/getTarget', async (ctx, next) => {
   result.data = tag;
   ctx.body = result;
 });
-
+// 获取文章
 router.post('/getArticle', async (ctx, next) => {
   let result = {
     code: '00000',
@@ -55,7 +101,7 @@ router.post('/getArticle', async (ctx, next) => {
   result.data = artList;
   ctx.body = result;
 });
-
+// 获取内容
 router.post('/getCon', async (ctx, next) => {
   let result = {
     code: '00000',
@@ -72,7 +118,7 @@ router.post('/getCon', async (ctx, next) => {
   result.data = list;
   ctx.body = result;
 });
-
+// 保存文章
 router.post('/saveArt', async (ctx, next) => {
   let result = {
     code: '00000',
@@ -96,6 +142,7 @@ router.post('/saveArt', async (ctx, next) => {
   result.data = success;
   ctx.body = result
 });
+
 router.post('/deleteTarget', async (ctx, next) => {
   let id = ctx.request.body.id;
   let success = await Target.update({
@@ -174,3 +221,16 @@ router.post('/pubArt', async (ctx, next) => {
 
 
 module.exports = router
+
+
+/** 
+  *@param   str 字符串 
+   @param   key 秘钥 
+  */  
+ function md5(str,key=''){  
+  var decipher = crypto.createHash('md5',key)  
+  if(key){  
+    return decipher.update(str).digest()  
+  }  
+  return decipher.update(str).digest('hex')  
+}  

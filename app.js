@@ -7,7 +7,7 @@ const static = require('koa-static')
 const session = require('koa-session-minimal')
 const views = require('koa-views')
 const multer = require('koa-multer')
-
+// const passport = require('./passport') // 权限验证
 const colors = require('colors')
 
 const app = new Koa();
@@ -16,8 +16,6 @@ const app = new Koa();
 const staticPath = './app/static'
 
 const upload = multer({ dest: path.join(__dirname,'./app/static/upload/') })
-
-
 
 app
   .use(bodyParser())
@@ -40,9 +38,10 @@ app
       signed: '',
     }
   }))
+  // .use(passport.initialize())
+  // .use(passport.session())
   .use(router.routes())
   .use(router.allowedMethods())
-
 
 console.log(`server start at http://localhost:3000/`.green)
 app.listen(3000);
